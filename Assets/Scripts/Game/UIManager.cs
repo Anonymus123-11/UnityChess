@@ -164,4 +164,9 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 	}
 
 	private void UpdateGameStringInputField() => GameStringInputField.text = GameManager.Instance.SerializeGame();
+
+	public void GoToMainMenu()
+	{
+		UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+	}
 }
