@@ -71,10 +71,13 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
 			positionMap[position].transform
 		);
 
-		/*if (!(piece is Knight) && !(piece is King)) {
+        pieceGO.transform.localScale *= 1.2f;
+        pieceGO.transform.localPosition = Vector3.zero;
+
+        /*if (!(piece is Knight) && !(piece is King)) {
 			pieceGO.transform.Rotate(0f, (float) rng.NextDouble() * 360f, 0f);
 		}*/
-	}
+    }
 
 	public void GetSquareGOsWithinRadius(List<GameObject> squareGOs, Vector3 positionWS, float radius) {
 		float radiusSqr = radius * radius;
