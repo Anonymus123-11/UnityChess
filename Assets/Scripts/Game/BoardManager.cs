@@ -64,22 +64,66 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
 		rookGO.transform.localPosition = Vector3.zero;
 	}
 
-	public void CreateAndPlacePieceGO(Piece piece, Square position) {
-		string modelName = $"{piece.Owner} {piece.GetType().Name}";
-		GameObject pieceGO = Instantiate(
-			Resources.Load("PieceSets/Marble/" + modelName) as GameObject,
-			positionMap[position].transform
-		);
+    public void CreateAndPlacePieceGO(Piece piece, Square position)
+    {
+        string modelName = $"{piece.Owner} {piece.GetType().Name}";
+        GameObject pieceGO = Instantiate(
+            Resources.Load("PieceSets/Marble/" + modelName) as GameObject,
+            positionMap[position].transform
+        );
 
-        pieceGO.transform.localScale *= 1.2f;
-        pieceGO.transform.localPosition = Vector3.zero;
+        pieceGO.transform.localScale *= 1.5f;
 
-        /*if (!(piece is Knight) && !(piece is King)) {
-			pieceGO.transform.Rotate(0f, (float) rng.NextDouble() * 360f, 0f);
-		}*/
+        // Gộp bounds của tất cả renderer con
+        var renderers = pieceGO.GetComponentsInChildren<Renderer>();
+        if (renderers.Length > 0)
+        {
+            Bounds combinedBounds = renderers[0].bounds;
+            foreach (Renderer r in renderers)
+                combinedBounds.Encapsulate(r.bounds);
+
+            // Lấy tâm local của model
+            Vector3 localCenter = pieceGO.transform.InverseTransformPoint(combinedBounds.center);
+
+            // Dịch model để tâm nằm giữa ô
+            Vector3 offset = -localCenter;
+
+            // Giữ nguyên chiều cao (không làm cờ lún)
+            offset.y = 0;
+
+            // --- Fine-tune riêng cho Knight ---
+            if (piece is Knight)
+            {
+                if (piece.Owner == Side.White)
+                {
+                    offset.x -= 0.1f; // tinh chỉnh nhẹ sang phải
+                    offset.z += 0.7f; // tinh chỉnh nhẹ ra sau
+                }
+                else if (piece.Owner == Side.Black)
+                {
+                    offset.x += 0.7f; // ngược hướng trắng
+                    offset.z -= 0.1f;
+                }
+            }
+
+            pieceGO.transform.localPosition = offset;
+        }
+        else
+        {
+            pieceGO.transform.localPosition = Vector3.zero;
+        }
+
+        // Tuỳ chọn: xoay ngẫu nhiên nếu muốn cho tự nhiên
+        /*
+        if (!(piece is Knight) && !(piece is King))
+        {
+            pieceGO.transform.Rotate(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+        }
+        */
     }
 
-	public void GetSquareGOsWithinRadius(List<GameObject> squareGOs, Vector3 positionWS, float radius) {
+
+    public void GetSquareGOsWithinRadius(List<GameObject> squareGOs, Vector3 positionWS, float radius) {
 		float radiusSqr = radius * radius;
 		foreach (GameObject squareGO in allSquaresGO) {
 			if ((squareGO.transform.position - positionWS).sqrMagnitude < radiusSqr)
