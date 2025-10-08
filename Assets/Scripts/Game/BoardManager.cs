@@ -11,8 +11,11 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
 	private const float BoardPlaneSideHalfLength = BoardPlaneSideLength * 0.5f;
 	private const float BoardHeight = 1.6f;
 	private readonly System.Random rng = new System.Random();
+    [Header("Captured Pieces UI")]
+    public CapturedPiecesUI capturedPiecesUI; // Kéo UIManager vào đây trong Inspector
 
-	private void Awake() {
+
+    private void Awake() {
 		GameManager.NewGameStartedEvent += OnNewGameStarted;
 		GameManager.GameResetToHalfMoveEvent += OnGameResetToHalfMove;
 		
@@ -146,12 +149,23 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
 		}
 	}
 
-	public void TryDestroyVisualPiece(Square position) {
-		VisualPiece visualPiece = positionMap[position].GetComponentInChildren<VisualPiece>();
-		if (visualPiece != null) DestroyImmediate(visualPiece.gameObject);
-	}
-	
-	public GameObject GetPieceGOAtPosition(Square position) {
+    public void TryDestroyVisualPiece(Square position)
+    {
+        VisualPiece visualPiece = positionMap[position].GetComponentInChildren<VisualPiece>();
+        if (visualPiece != null)
+        {
+            if (capturedPiecesUI != null)
+            {
+                bool isWhite = visualPiece.PieceColor == Side.White;
+                capturedPiecesUI.AddCapturedPiece(isWhite);
+            }
+
+            DestroyImmediate(visualPiece.gameObject);
+        }
+    }
+
+
+    public GameObject GetPieceGOAtPosition(Square position) {
 		GameObject square = GetSquareGOByPosition(position);
 		return square.transform.childCount == 0 ? null : square.transform.GetChild(0).gameObject;
 	}
