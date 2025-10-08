@@ -18,8 +18,16 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
     private void Awake() {
 		GameManager.NewGameStartedEvent += OnNewGameStarted;
 		GameManager.GameResetToHalfMoveEvent += OnGameResetToHalfMove;
-		
-		positionMap = new Dictionary<Square, GameObject>(64);
+
+        if (capturedPiecesUI != null)
+        {
+            foreach (Transform child in capturedPiecesUI.whiteArea)
+                Destroy(child.gameObject);
+            foreach (Transform child in capturedPiecesUI.blackArea)
+                Destroy(child.gameObject);
+        }
+
+        positionMap = new Dictionary<Square, GameObject>(64);
 		Transform boardTransform = transform;
 		Vector3 boardPosition = boardTransform.position;
 		
@@ -39,29 +47,53 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
 		}
 	}
 
-	private void OnNewGameStarted() {
-		ClearBoard();
-		
-		foreach ((Square square, Piece piece) in GameManager.Instance.CurrentPieces) {
-			CreateAndPlacePieceGO(piece, square);
-		}
+    private void OnNewGameStarted()
+    {
+        // 1. Clear all VisualPieces
+        ClearBoard();
 
-		EnsureOnlyPiecesOfSideAreEnabled(GameManager.Instance.SideToMove);
-	}
+        // 2. Clear captured pieces UI
+        if (capturedPiecesUI != null)
+        {
+            foreach (Transform child in capturedPiecesUI.whiteArea)
+                Destroy(child.gameObject);
+            foreach (Transform child in capturedPiecesUI.blackArea)
+                Destroy(child.gameObject);
+        }
 
-	private void OnGameResetToHalfMove() {
-		ClearBoard();
+        foreach ((Square square, Piece piece) in GameManager.Instance.CurrentPieces)
+        {
+            CreateAndPlacePieceGO(piece, square);
+        }
 
-		foreach ((Square square, Piece piece) in GameManager.Instance.CurrentPieces) {
-			CreateAndPlacePieceGO(piece, square);
-		}
+        EnsureOnlyPiecesOfSideAreEnabled(GameManager.Instance.SideToMove);
+    }
 
-		GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
-		if (latestHalfMove.CausedCheckmate || latestHalfMove.CausedStalemate) SetActiveAllPieces(false);
-		else EnsureOnlyPiecesOfSideAreEnabled(GameManager.Instance.SideToMove);
-	}
 
-	public void CastleRook(Square rookPosition, Square endSquare) {
+    private void OnGameResetToHalfMove()
+    {
+        ClearBoard();
+
+        if (capturedPiecesUI != null)
+        {
+            foreach (Transform child in capturedPiecesUI.whiteArea)
+                Destroy(child.gameObject);
+            foreach (Transform child in capturedPiecesUI.blackArea)
+                Destroy(child.gameObject);
+        }
+
+        foreach ((Square square, Piece piece) in GameManager.Instance.CurrentPieces)
+        {
+            CreateAndPlacePieceGO(piece, square);
+        }
+
+        GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
+        if (latestHalfMove.CausedCheckmate || latestHalfMove.CausedStalemate) SetActiveAllPieces(false);
+        else EnsureOnlyPiecesOfSideAreEnabled(GameManager.Instance.SideToMove);
+    }
+
+
+    public void CastleRook(Square rookPosition, Square endSquare) {
 		GameObject rookGO = GetPieceGOAtPosition(rookPosition);
 		rookGO.transform.parent = GetSquareGOByPosition(endSquare).transform;
 		rookGO.transform.localPosition = Vector3.zero;
@@ -123,6 +155,13 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
             pieceGO.transform.Rotate(0f, UnityEngine.Random.Range(0f, 360f), 0f);
         }
         */
+        VisualPiece visualPiece = pieceGO.GetComponent<VisualPiece>();
+        if (visualPiece != null)
+        {
+            visualPiece.piece = piece;
+            visualPiece.PieceColor = piece.Owner;
+            visualPiece.PieceTypeManual = piece.GetType().Name; // Rook, Knight, Bishop, Queen, Pawn
+        }
     }
 
 
@@ -156,13 +195,19 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
         {
             if (capturedPiecesUI != null)
             {
-                bool isWhite = visualPiece.PieceColor == Side.White;
-                capturedPiecesUI.AddCapturedPiece(isWhite);
+                // Sử dụng PieceTypeManual để xác định sprite
+                capturedPiecesUI.AddCapturedPiece(
+                    visualPiece.PieceType, // <-- dùng PieceType hoặc PieceTypeManual
+                    visualPiece.PieceColor == Side.White
+                );
             }
 
+            // Xoá quân cờ khỏi board
             DestroyImmediate(visualPiece.gameObject);
         }
     }
+
+
 
 
     public GameObject GetPieceGOAtPosition(Square position) {
