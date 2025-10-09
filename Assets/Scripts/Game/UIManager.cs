@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityChess;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class UIManager : MonoBehaviourSingleton<UIManager> {
 	[SerializeField] private GameObject promotionUI = null;
@@ -18,8 +19,13 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 	[SerializeField] private Color textColor = new Color(1f, 0.71f, 0.18f);
 	[SerializeField, Range(-0.25f, 0.25f)] private float buttonColorDarkenAmount = 0f;
 	[SerializeField, Range(-0.25f, 0.25f)] private float moveHistoryAlternateColorDarkenAmount = 0f;
-	
-	private Timeline<FullMoveUI> moveUITimeline;
+    [SerializeField] private Text turnIndicatorText = null;
+    [SerializeField] private Text gameStatusText = null;
+    [SerializeField] private TMP_Text pauseButtonText = null;
+
+
+    private bool isPaused = false;
+    private Timeline<FullMoveUI> moveUITimeline;
 	private Color buttonColor;
 
 	private void Start() {
@@ -39,17 +45,22 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 	private void OnNewGameStarted() {
 		UpdateGameStringInputField();
 		ValidateIndicators();
-		
-		for (int i = 0; i < moveHistoryContentParent.transform.childCount; i++) {
+
+        Side sideToMove = GameManager.Instance.SideToMove;
+        turnIndicatorText.text = sideToMove == Side.White ? "White's Turn" : "Black's Turn";
+
+        for (int i = 0; i < moveHistoryContentParent.transform.childCount; i++) {
 			Destroy(moveHistoryContentParent.transform.GetChild(i).gameObject);
 		}
 		
 		moveUITimeline.Clear();
 
 		resultText.gameObject.SetActive(false);
-	}
+        gameStatusText.text = "";
+        SetBoardInteraction(true);
+    }
 
-	private void OnGameEnded() {
+    private void OnGameEnded() {
 		GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
 
 		if (latestHalfMove.CausedCheckmate) {
@@ -66,12 +77,31 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 		Side sideToMove = GameManager.Instance.SideToMove;
 		whiteTurnIndicator.enabled = sideToMove == Side.White;
 		blackTurnIndicator.enabled = sideToMove == Side.Black;
+        turnIndicatorText.text = sideToMove == Side.White ? "White's Turn" : "Black's Turn";
 
-		GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove lastMove);
+
+        GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove lastMove);
 		AddMoveToHistory(lastMove, sideToMove.Complement());
-	}
+        // ✅ Hiển thị trạng thái game
+        if (lastMove.CausedCheckmate)
+        {
+            gameStatusText.text = $"{lastMove.Piece.Owner} is checkmated!";
+        }
+        else if (lastMove.CausedStalemate)
+        {
+            gameStatusText.text = "Draw (Stalemate)";
+        }
+        else if (lastMove.CausedCheck)
+        {
+            gameStatusText.text = "Check!";
+        }
+        else
+        {
+            gameStatusText.text = "";
+        }
+    }
 
-	private void OnGameResetToHalfMove() {
+    private void OnGameResetToHalfMove() {
 		UpdateGameStringInputField();
 		moveUITimeline.HeadIndex = GameManager.Instance.LatestHalfMoveIndex / 2;
 		ValidateIndicators();
@@ -169,4 +199,50 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 	{
 		UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
 	}
+
+
+    public void OnPauseButtonClicked()
+    {
+        isPaused = !isPaused;
+        Time.timeScale = isPaused ? 0f : 1f;
+
+        pauseButtonText.text = isPaused ? "Continue" : "Pause";
+        gameStatusText.text = isPaused ? "Game Paused" : "";
+
+        SetBoardInteraction(!isPaused);
+    }
+
+    public void OnResignButtonClicked()
+    {
+        if (resultText.gameObject.activeSelf)
+            return;
+
+        Side sideToMove = GameManager.Instance.SideToMove;
+        resultText.text = $"{sideToMove} resigned. {(sideToMove == Side.White ? "Black" : "White")} wins!";
+        resultText.gameObject.SetActive(true);
+
+        Time.timeScale = 0f;
+        gameStatusText.text = "Game Over (Resign)";
+
+        SetBoardInteraction(false);
+    }
+
+
+    public void OnOfferDrawButtonClicked()
+    {
+        resultText.text = "Draw agreed.";
+        resultText.gameObject.SetActive(true);
+
+        Time.timeScale = 0f;
+        gameStatusText.text = "Game Drawn";
+
+        SetBoardInteraction(false);
+    }
+
+
+    private void SetBoardInteraction(bool active)
+    {
+        BoardManager.Instance.SetActiveAllPieces(active);
+    }
+
 }
