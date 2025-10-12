@@ -2096,25 +2096,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   whiteArea: {fileID: 249128397}
   blackArea: {fileID: 328478236}
-  whitePawnSprite: {fileID: 7130974496974645434, guid: 5ff6fc819fab34a469a05c28c68c55d9,
+  whitePawnSprite: {fileID: 98217054743987540, guid: a480c9de1f08f9a4dac5fc0ff8b07fee,
     type: 3}
-  whiteRookSprite: {fileID: 6900024571634755880, guid: fc19fe0e043278245abeb5d652fce2bb,
+  whiteRookSprite: {fileID: -8466624454714946680, guid: 7ee8124bc3aeabe44b5b8364e59e7974,
     type: 3}
-  whiteKnightSprite: {fileID: 3885420487060091379, guid: e42aa7e2ea755894397e488271224c3b,
+  whiteKnightSprite: {fileID: -7387631199204486257, guid: 59675915f76dbb64dadd4b877fa044d1,
     type: 3}
-  whiteBishopSprite: {fileID: 7625119727820412504, guid: 815aa91510b535f4c8e33d8a819cc68c,
+  whiteBishopSprite: {fileID: -3870382670223915123, guid: 67b7e05f8bac7244e848b2a3037d4f31,
     type: 3}
-  whiteQueenSprite: {fileID: -8221689796485857587, guid: f1b1d8f6bcd665e46a5d6c91e0e28253,
+  whiteQueenSprite: {fileID: 7046639545829712708, guid: 00484f65ff37ed64b8411fa6adccc683,
     type: 3}
   blackPawnSprite: {fileID: 2582881921453283448, guid: 98d4f0c572e82c646b05ab0129730dad,
     type: 3}
-  blackRookSprite: {fileID: -8901841579980752213, guid: 96daf899792df4642ae1aa949cae811a,
+  blackRookSprite: {fileID: 4397393532686069487, guid: 85f56efd36d684144b16adbbbdc93191,
     type: 3}
-  blackKnightSprite: {fileID: 8801970627780696396, guid: 41ce3da87e0e6644ca2e0c4edb403a86,
+  blackKnightSprite: {fileID: -8780177893704233351, guid: cd09684ad911d764d8b4367a99f10f37,
     type: 3}
-  blackBishopSprite: {fileID: -2436205243508918674, guid: 0501cc5b480c53f4696c7793b50a3714,
+  blackBishopSprite: {fileID: 2404617932365875479, guid: e4a43b2fce2d39045a74acdfa366e1de,
     type: 3}
-  blackQueenSprite: {fileID: -5283442719889485049, guid: 38ac2797eb2555644869702240e566ee,
+  blackQueenSprite: {fileID: -3198023339627254119, guid: 38c2ec902909f2e4598635ca701ab2e8,
     type: 3}
 --- !u!114 &1385818414
 MonoBehaviour:
