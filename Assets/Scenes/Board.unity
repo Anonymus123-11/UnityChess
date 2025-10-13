@@ -3885,6 +3885,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: GameManager
       objectReference: {fileID: 0}
+    - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
+        type: 3}
+      propertyPath: aiMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
+        type: 3}
+      propertyPath: sfxMove
+      value: 
+      objectReference: {fileID: 8300000, guid: b217ed87b8b92144290ad9f371f5e615, type: 3}
+    - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
+        type: 3}
+      propertyPath: sfxCheck
+      value: 
+      objectReference: {fileID: 8300000, guid: 0693e2b05b59e03479d8aa00dd77b26b, type: 3}
+    - target: {fileID: 7463109367895200373, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
+        type: 3}
+      propertyPath: aiThinkTimeMs
+      value: 1000
+      objectReference: {fileID: 0}
     - target: {fileID: 8433262171349199163, guid: caf93e4ddc2f0544cbddf4e2facb7fd7,
         type: 3}
       propertyPath: moveUIPrefab
