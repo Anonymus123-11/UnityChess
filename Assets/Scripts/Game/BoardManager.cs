@@ -107,47 +107,6 @@ public class BoardManager : MonoBehaviourSingleton<BoardManager> {
             positionMap[position].transform
         );
 
-        pieceGO.transform.localScale *= 1.5f;
-
-        // Gộp bounds của tất cả renderer con
-        var renderers = pieceGO.GetComponentsInChildren<Renderer>();
-        if (renderers.Length > 0)
-        {
-            Bounds combinedBounds = renderers[0].bounds;
-            foreach (Renderer r in renderers)
-                combinedBounds.Encapsulate(r.bounds);
-
-            // Lấy tâm local của model
-            Vector3 localCenter = pieceGO.transform.InverseTransformPoint(combinedBounds.center);
-
-            // Dịch model để tâm nằm giữa ô
-            Vector3 offset = -localCenter;
-
-            // Giữ nguyên chiều cao (không làm cờ lún)
-            offset.y = 0;
-
-            // --- Fine-tune riêng cho Knight ---
-            if (piece is Knight)
-            {
-                if (piece.Owner == Side.White)
-                {
-                    offset.x -= 0.1f; // tinh chỉnh nhẹ sang phải
-                    offset.z += 0.7f; // tinh chỉnh nhẹ ra sau
-                }
-                else if (piece.Owner == Side.Black)
-                {
-                    offset.x += 0.7f; // ngược hướng trắng
-                    offset.z -= 0.1f;
-                }
-            }
-
-            pieceGO.transform.localPosition = offset;
-        }
-        else
-        {
-            pieceGO.transform.localPosition = Vector3.zero;
-        }
-
         // Tuỳ chọn: xoay ngẫu nhiên nếu muốn cho tự nhiên
         /*
         if (!(piece is Knight) && !(piece is King))
