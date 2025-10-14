@@ -1,145 +1,98 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿// Assets/Scripts/Game/MockUCIEngine.cs
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Timers;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
+using UnityChess;
 
-namespace UnityChess.Engine {
-	public class MockUCIEngine : IUCIEngine {
-		private Process engineProcess;
-		private string exePath = Application.streamingAssetsPath + "/UCIEngines/pigeon-1.5.1/pigeon-1.5.1.exe";
-		private bool isReady;
-		private Timer timer;
-		private float timeMS;
-		
-		private FENSerializer fenSerializer = new FENSerializer();
-		private bool isSearchingForBestMove;
-		private Game game;
-		
-		public async void Start() {
-			timer = new Timer(100);
-			timer.Elapsed += (_, _) => timeMS += 100;
-			
-			engineProcess = new Process();
-			engineProcess.StartInfo = new ProcessStartInfo(
-				exePath
-			) {
-				UseShellExecute = false,
-				RedirectStandardInput = true,
-				RedirectStandardOutput = true,
-				CreateNoWindow = true
-			};
-			engineProcess.Start();
-			
-			await foreach (string engineOutputLine in Receive()) {
-				Debug.Log(engineOutputLine);
-			}
+namespace UnityChess.Engine
+{
+    /// <summary>
+    /// MockUCIEngine: Engine giả lập để test.
+    /// - KHÔNG chạy process bên ngoài, KHÔNG gửi lệnh UCI.
+    /// - Chỉ "suy nghĩ" (Task.Delay) rồi trả về một nước đi hợp lệ ngẫu nhiên.
+    /// </summary>
+    public class MockUCIEngine : IUCIEngine
+    {
+        private Game _game;
+        private bool _running;
+        private readonly System.Random _rng = new System.Random();
 
-			await Send("uci");
-			await foreach (string engineOutputLine in Receive("uciok")) {
-				Debug.Log(engineOutputLine);
-			}
-			
-			await Send("isready");
-			await foreach (string engineOutputLine in Receive("readyok")) {
-				Debug.Log(engineOutputLine);
-			}
-			isReady = true;
-		}
+        /// <summary>
+        /// Khởi động mock (không spawn process).
+        /// </summary>
+        public void Start()
+        {
+            _running = true;
+            Debug.Log("[MOCK UCI] Started (no external process).");
+        }
 
-		public void ShutDown() {
-			engineProcess.Close();
-		}
-		
-		public async Task SetupNewGame(Game game) {
-			this.game = game;
+        /// <summary>
+        /// Tắt mock (khớp interface: return void).
+        /// </summary>
+        public void ShutDown()
+        {
+            _running = false;
+            Debug.Log("[MOCK UCI] Shut down.");
+        }
 
-			while (!isReady) {
-				await Task.Yield();
-			}
-			
-			await Send("ucinewgame");
-		}
+        /// <summary>
+        /// Thiết lập ván mới.
+        /// </summary>
+        public Task SetupNewGame(Game game)
+        {
+            _game = game;
+            Debug.Log("[MOCK UCI] New game set.");
+            return Task.CompletedTask;
+        }
 
-		public async Task<Movement> GetBestMove(int timeoutMS = -1) {
-			game.ConditionsTimeline.TryGetCurrent(out GameConditions currentConditions);
-			Side sideToMove = currentConditions.SideToMove;
-			await Send($"position fen {fenSerializer.Serialize(game)}");
+        /// <summary>
+        /// Trả về một nước đi hợp lệ ngẫu nhiên sau khi "suy nghĩ" thinkTimeMs.
+        /// </summary>
+        public async Task<Movement> GetBestMove(int thinkTimeMs)
+        {
+            if (!_running) throw new InvalidOperationException("[MOCK UCI] Engine not started.");
+            if (_game == null) throw new InvalidOperationException("[MOCK UCI] Game is null.");
 
-			if (!isSearchingForBestMove) {
-				isSearchingForBestMove = true;
-				await Send($"go movetime {timeoutMS}");
-			}
-			
-			await foreach (string line in Receive("bestmove")) {
-				Debug.Log(line);
-				if (line.StartsWith("bestmove")) {
-					isSearchingForBestMove = false;
-					return ParseUCIMove(line.Split(" ")[1], sideToMove);
-				}
-			}
+            // Giả lập thời gian suy nghĩ (giới hạn 0..5000ms cho mock)
+            int delay = Mathf.Clamp(thinkTimeMs, 0, 5000);
+            if (delay > 0) await Task.Delay(delay);
 
-			await Send("stop");
+            var moves = CollectAllLegalMoves(_game);
+            if (moves.Count == 0)
+            {
+                Debug.Log("[MOCK UCI] No legal moves available.");
+                return null;
+            }
 
-			Movement result = null;
-			await foreach (string line in Receive("bestmove")) {
-				Debug.Log(line);
-				if (line.StartsWith("bestmove")) {
-					isSearchingForBestMove = false;
-					result = ParseUCIMove(line.Split(" ")[1], sideToMove);
-				}
-			}
-			
-			return result;
-		}
+            // Chọn ngẫu nhiên 1 nước đi hợp lệ
+            int idx = _rng.Next(moves.Count);
+            return moves[idx];
+        }
 
-		private static Movement ParseUCIMove(string uciMove, Side sideToMove) {
-			Movement result;
-			if (uciMove.Length > 4) {
-				result = new PromotionMove(
-					new Square(uciMove[..2]),
-					new Square(uciMove[2..4])
-				);
-				
-				ElectedPiece electedPiece = uciMove[4..5].ToLower() switch {
-					"b" => ElectedPiece.Bishop,
-					"n" => ElectedPiece.Knight,
-					"q" => ElectedPiece.Queen,
-					"r" => ElectedPiece.Rook,
-					_ => ElectedPiece.None
-				};
+        /// <summary>
+        /// Thu thập tất cả nước đi hợp lệ cho bên đang tới lượt.
+        /// Không truy cập piece.Side; chỉ cần hỏi game.
+        /// </summary>
+        private static List<Movement> CollectAllLegalMoves(Game game)
+        {
+            var result = new List<Movement>();
 
-				((PromotionMove)result).SetPromotionPiece(
-					PromotionUtil.GeneratePromotionPiece(electedPiece, sideToMove)
-				);
-			} else {
-				result = new Movement(
-					new Square(uciMove[..2]),
-					new Square(uciMove[2..4])
-				);
-			}
+            game.BoardTimeline.TryGetCurrent(out Board board);
 
-			return result;
-		}
+            for (int file = 1; file <= 8; file++)
+            {
+                for (int rank = 1; rank <= 8; rank++)
+                {
+                    Piece piece = board[file, rank];
+                    if (piece == null) continue;
 
-		private async Task Send(string data) {
-			await engineProcess.StandardInput.WriteLineAsync($"{data}\n");
-		}
+                    if (game.TryGetLegalMovesForPiece(piece, out ICollection<Movement> legal) && legal != null)
+                        result.AddRange(legal);
+                }
+            }
 
-		private async IAsyncEnumerable<string> Receive(string responseBreak = null, int timeoutMS = -1) {
-			string line = null;
-			float startTime = timeMS;
-
-			while (!ResponseFinished() && (timeoutMS < 0 || timeMS - startTime < timeoutMS)) {
-				line = await engineProcess.StandardOutput.ReadLineAsync();
-				yield return line;
-			}
-
-			bool ResponseFinished() => responseBreak switch {
-				null => engineProcess.StandardOutput.Peek() == -1,
-				_ => line?.StartsWith(responseBreak) ?? false
-			};
-		}
-	}
+            return result;
+        }
+    }
 }
