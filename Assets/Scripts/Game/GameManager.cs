@@ -112,6 +112,9 @@ public class GameManager : MonoBehaviourSingleton<GameManager> {
 			[GameSerializationType.PGN] = new PGNSerializer()
 		};
 
+        // Read the game mode from our static 'GameSetup' class.
+        this.aiMode = GameSetup.SelectedAIMode;
+
         ApplyAIModeToFlags();
         StartNewGame(whiteIsAI, blackIsAI);
 

@@ -1,7 +1,14 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Assets",
+    "\\Assets\\Prefabs",
+    "\\Assets\\Resources",
+    "\\Assets\\Scenes",
+    "\\Assets\\Scenes\\Board",
+    "\\packages",
+    "\\ProjectSettings"
   ],
-  "SelectedNode": "\\C:\\Users\\ADMIN\\Source\\Repos\\UnityChess",
+  "SelectedNode": "\\Assets\\Prefabs\\GameManager.prefab",
   "PreviewInSolutionExplorer": false
 }

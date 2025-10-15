@@ -69,23 +69,17 @@ public class MainMenu : MonoBehaviour
     // Scene name of the main game board
     private string gameSceneName = "Board";
 
-    public void PlayPlayerVsPlayer()
+    public void PlayGame()
     {
-        // Here we will eventually set a static flag or use a ScriptableObject to tell GameManager what mode to start
-        Debug.Log("Starting Player vs Player mode...");
-        // For now, we just load the scene. The GameManager's default is PvP.
+        Debug.Log("Setting selected AI mode in GameSetup...");
+
+        // Write our choice to the static 'GameSetup' class.
+        // We assume the player is White and the AI is Black.
+        // From GameManager's enum: 0=HH, 1=HumanVsAI_White, 2=HumanVsAI_Black
+        GameSetup.SelectedAIMode = GameManager.AIMode.HumanVsAI_Black;
+
+        // Now, load the game scene. The GameManager in that scene will read this value.
         StartCoroutine(FadeThenLoad(gameSceneName));
-
-    }
-
-    public void PlayPlayerVsAI()
-    {
-        // This will require more logic to select side (White/Black)
-        // For now, let's just log it.
-        Debug.Log("Player vs AI mode selected - (Not fully implemented yet)");
-        // Example of how it could work:
-        // GameManager.StartAsPlayerVsAI(Side.White);
-        // SceneManager.LoadScene(gameSceneName);
     }
 
     public void OpenSettings()

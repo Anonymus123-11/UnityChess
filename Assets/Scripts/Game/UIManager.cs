@@ -7,6 +7,7 @@ using TMPro;
 
 public class UIManager : MonoBehaviourSingleton<UIManager> {
 	[SerializeField] private GameObject promotionUI = null;
+	[SerializeField] private GameObject drawPopup = null;
 	[SerializeField] private Text resultText = null;
 	[SerializeField] private InputField GameStringInputField = null;
 	[SerializeField] private Image whiteTurnIndicator = null;
@@ -23,7 +24,6 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
     [SerializeField] private Text gameStatusText = null;
     [SerializeField] private TMP_Text pauseButtonText = null;
 
-
     private bool isPaused = false;
     private Timeline<FullMoveUI> moveUITimeline;
 	private Color buttonColor;
@@ -35,28 +35,42 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 		GameManager.GameResetToHalfMoveEvent += OnGameResetToHalfMove;
 		
 		moveUITimeline = new Timeline<FullMoveUI>();
-		foreach (Text boardInfoText in boardInfoTexts) {
-			boardInfoText.color = textColor;
-		}
+
+        if (boardInfoTexts != null)
+        {
+            foreach (Text boardInfoText in boardInfoTexts)
+            {
+                if (boardInfoText != null) boardInfoText.color = textColor;
+            }
+        }
 
 		buttonColor = new Color(backgroundColor.r - buttonColorDarkenAmount, backgroundColor.g - buttonColorDarkenAmount, backgroundColor.b - buttonColorDarkenAmount);
 	}
 
 	private void OnNewGameStarted() {
-		UpdateGameStringInputField();
+		// UpdateGameStringInputField();
 		ValidateIndicators();
 
-        Side sideToMove = GameManager.Instance.SideToMove;
-        turnIndicatorText.text = sideToMove == Side.White ? "White's Turn" : "Black's Turn";
+        if (turnIndicatorText != null) 
+        {
+            Side sideToMove = GameManager.Instance.SideToMove;
+            turnIndicatorText.text = sideToMove == Side.White ? "White's Turn" : "Black's Turn";
+        }
 
-        for (int i = 0; i < moveHistoryContentParent.transform.childCount; i++) {
-			Destroy(moveHistoryContentParent.transform.GetChild(i).gameObject);
-		}
+        if (moveHistoryContentParent != null)
+        {
+            for (int i = 0; i < moveHistoryContentParent.transform.childCount; i++)
+            {
+                Destroy(moveHistoryContentParent.transform.GetChild(i).gameObject);
+            }
+        }
 		
 		moveUITimeline.Clear();
 
-		resultText.gameObject.SetActive(false);
-        gameStatusText.text = "";
+		if (resultText != null) resultText.gameObject.SetActive(false);
+		if (drawPopup != null) drawPopup.SetActive(false);
+        if (gameStatusText != null) gameStatusText.text = "";
+        
         SetBoardInteraction(true);
     }
 
@@ -64,50 +78,59 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 		GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
 
 		if (latestHalfMove.CausedCheckmate) {
-			resultText.text = $"{latestHalfMove.Piece.Owner} Wins!";
+            if (resultText != null)
+            {
+                resultText.text = $"{latestHalfMove.Piece.Owner} Wins!";
+                resultText.gameObject.SetActive(true);
+            }
+			SetBoardInteraction(false);
 		} else if (latestHalfMove.CausedStalemate) {
-			resultText.text = "Draw.";
+			if (drawPopup != null) drawPopup.SetActive(true);
+			SetBoardInteraction(false);
 		}
-
-		resultText.gameObject.SetActive(true);
 	}
 
 	private void OnMoveExecuted() {
-		UpdateGameStringInputField();
-		Side sideToMove = GameManager.Instance.SideToMove;
-		whiteTurnIndicator.enabled = sideToMove == Side.White;
-		blackTurnIndicator.enabled = sideToMove == Side.Black;
-        turnIndicatorText.text = sideToMove == Side.White ? "White's Turn" : "Black's Turn";
+		// UpdateGameStringInputField();
+		ValidateIndicators();
 
+        Side sideToMove = GameManager.Instance.SideToMove;
+        if (turnIndicatorText != null) turnIndicatorText.text = sideToMove == Side.White ? "White's Turn" : "Black's Turn";
 
         GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove lastMove);
-		AddMoveToHistory(lastMove, sideToMove.Complement());
-        // ✅ Hiển thị trạng thái game
-        if (lastMove.CausedCheckmate)
+
+        if (moveUIPrefab != null && moveHistoryContentParent != null) AddMoveToHistory(lastMove, sideToMove.Complement());
+        
+        if (gameStatusText != null)
         {
-            gameStatusText.text = $"{lastMove.Piece.Owner} is checkmated!";
-        }
-        else if (lastMove.CausedStalemate)
-        {
-            gameStatusText.text = "Draw (Stalemate)";
-        }
-        else if (lastMove.CausedCheck)
-        {
-            gameStatusText.text = "Check!";
-        }
-        else
-        {
-            gameStatusText.text = "";
+            if (lastMove.CausedCheckmate)
+            {
+                gameStatusText.text = $"{lastMove.Piece.Owner} is checkmated!";
+            }
+            else if (lastMove.CausedStalemate)
+            {
+                gameStatusText.text = "Draw (Stalemate)";
+            }
+            else if (lastMove.CausedCheck)
+            {
+                gameStatusText.text = "Check!";
+            }
+            else
+            {
+                gameStatusText.text = "";
+            }
         }
     }
 
     private void OnGameResetToHalfMove() {
-		UpdateGameStringInputField();
-		moveUITimeline.HeadIndex = GameManager.Instance.LatestHalfMoveIndex / 2;
+		// UpdateGameStringInputField();
+		if (moveUITimeline != null) moveUITimeline.HeadIndex = GameManager.Instance.LatestHalfMoveIndex / 2;
 		ValidateIndicators();
 	}
 
-	public void SetActivePromotionUI(bool value) => promotionUI.gameObject.SetActive(value);
+	public void SetActivePromotionUI(bool value) {
+        if (promotionUI != null) promotionUI.gameObject.SetActive(value);
+    }
 
 	public void OnElectionButton(int choice) => GameManager.Instance.ElectPiece((ElectedPiece)choice);
 
@@ -121,7 +144,9 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 
 	public void StartNewGame() => GameManager.Instance.StartNewGame();
 	
-	public void LoadGame() => GameManager.Instance.LoadGame(GameStringInputField.text);
+	public void LoadGame() {
+        if (GameStringInputField != null) GameManager.Instance.LoadGame(GameStringInputField.text);
+    }
 
 	private void AddMoveToHistory(HalfMove latestHalfMove, Side latestTurnSide) {
 		RemoveAlternateHistory();
@@ -146,8 +171,10 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 				}
 				
 				moveUITimeline.TryGetCurrent(out FullMoveUI latestFullMoveUI);
-				latestFullMoveUI.BlackMoveText.text = latestHalfMove.ToAlgebraicNotation();
-				latestFullMoveUI.BlackMoveButton.enabled = true;
+                if (latestFullMoveUI != null) {
+				    latestFullMoveUI.BlackMoveText.text = latestHalfMove.ToAlgebraicNotation();
+				    latestFullMoveUI.BlackMoveButton.enabled = true;
+                }
 				
 				break;
 			}
@@ -173,13 +200,13 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 			}
 		}
 
-		moveHistoryScrollbar.value = 0;
+		if (moveHistoryScrollbar != null) moveHistoryScrollbar.value = 0;
 	}
 
 	private void RemoveAlternateHistory() {
-		if (!moveUITimeline.IsUpToDate) {
+		if (moveUITimeline != null && !moveUITimeline.IsUpToDate) {
 			GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove lastHalfMove);
-			resultText.gameObject.SetActive(lastHalfMove.CausedCheckmate);
+			if (resultText != null) resultText.gameObject.SetActive(lastHalfMove.CausedCheckmate);
 			List<FullMoveUI> divergentFullMoveUIs = moveUITimeline.PopFuture();
 			foreach (FullMoveUI divergentFullMoveUI in divergentFullMoveUIs) {
 				Destroy(divergentFullMoveUI.gameObject);
@@ -189,60 +216,62 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 
 	private void ValidateIndicators() {
 		Side sideToMove = GameManager.Instance.SideToMove;
-		whiteTurnIndicator.enabled = sideToMove == Side.White;
-		blackTurnIndicator.enabled = sideToMove == Side.Black;
+		if (whiteTurnIndicator != null) whiteTurnIndicator.enabled = sideToMove == Side.White;
+		if (blackTurnIndicator != null) blackTurnIndicator.enabled = sideToMove == Side.Black;
 	}
 
-	private void UpdateGameStringInputField() => GameStringInputField.text = GameManager.Instance.SerializeGame();
+	private void UpdateGameStringInputField() {
+        if (GameStringInputField != null) GameStringInputField.text = GameManager.Instance.SerializeGame();
+    }
 
 	public void GoToMainMenu()
 	{
 		UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
 	}
 
-
     public void OnPauseButtonClicked()
     {
         isPaused = !isPaused;
         Time.timeScale = isPaused ? 0f : 1f;
 
-        pauseButtonText.text = isPaused ? "Continue" : "Pause";
-        gameStatusText.text = isPaused ? "Game Paused" : "";
+        if (pauseButtonText != null) pauseButtonText.text = isPaused ? "Continue" : "Pause";
+        if (gameStatusText != null) gameStatusText.text = isPaused ? "Game Paused" : "";
 
         SetBoardInteraction(!isPaused);
     }
 
     public void OnResignButtonClicked()
     {
-        if (resultText.gameObject.activeSelf)
+        if (resultText != null && resultText.gameObject.activeSelf)
             return;
 
         Side sideToMove = GameManager.Instance.SideToMove;
-        resultText.text = $"{sideToMove} resigned. {(sideToMove == Side.White ? "Black" : "White")} wins!";
-        resultText.gameObject.SetActive(true);
+        if (resultText != null) {
+            resultText.text = $"{sideToMove} resigned. {(sideToMove == Side.White ? "Black" : "White")} wins!";
+            resultText.gameObject.SetActive(true);
+        }
 
         Time.timeScale = 0f;
-        gameStatusText.text = "Game Over (Resign)";
+        if (gameStatusText != null) gameStatusText.text = "Game Over (Resign)";
 
         SetBoardInteraction(false);
     }
-
 
     public void OnOfferDrawButtonClicked()
     {
-        resultText.text = "Draw agreed.";
-        resultText.gameObject.SetActive(true);
+        if (resultText != null) {
+            resultText.text = "Draw agreed.";
+            resultText.gameObject.SetActive(true);
+        }
 
         Time.timeScale = 0f;
-        gameStatusText.text = "Game Drawn";
+        if (gameStatusText != null) gameStatusText.text = "Game Drawn";
 
         SetBoardInteraction(false);
     }
 
-
     private void SetBoardInteraction(bool active)
     {
-        BoardManager.Instance.SetActiveAllPieces(active);
+        if (BoardManager.Instance != null) BoardManager.Instance.SetActiveAllPieces(active);
     }
-
 }

@@ -633,13 +633,12 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1340170416}
-  - {fileID: 1145236372}
   m_Father: {fileID: 1222833318}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 592, y: -162}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: 663, y: -138.83}
+  m_SizeDelta: {x: 160, y: 81.0647}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &284809751
 MonoBehaviour:
@@ -749,7 +748,7 @@ GameObject:
   - component: {fileID: 390880492}
   - component: {fileID: 390880495}
   m_Layer: 5
-  m_Name: PlayPvPButton
+  m_Name: Play
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -821,7 +820,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 75272452}
         m_TargetAssemblyTypeName: MainMenu, Assembly-CSharp
-        m_MethodName: PlayPlayerVsPlayer
+        m_MethodName: PlayGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1486,11 +1485,11 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 738944426}
-  m_Father: {fileID: 284809750}
+  m_Father: {fileID: 1222833318}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -355.76996, y: 147}
+  m_AnchoredPosition: {x: 236.2301, y: -15}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1145236373
@@ -1688,6 +1687,7 @@ RectTransform:
   - {fileID: 741865958}
   - {fileID: 390880491}
   - {fileID: 284809750}
+  - {fileID: 1145236372}
   - {fileID: 1991872532}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
