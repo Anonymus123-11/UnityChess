@@ -54,21 +54,25 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 		}
 		
 		moveUITimeline.Clear();
-
-		resultText.gameObject.SetActive(false);
+        if (resultText != null)
+            resultText.gameObject.SetActive(false);
         gameStatusText.text = "";
         SetBoardInteraction(true);
     }
 
     private void OnGameEnded() {
 		GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove latestHalfMove);
-
-		if (latestHalfMove.CausedCheckmate) {
-			resultText.text = $"{latestHalfMove.Piece.Owner} Wins!";
-		} else if (latestHalfMove.CausedStalemate) {
-			resultText.text = "Draw.";
+		if (resultText != null)
+		{
+			if (latestHalfMove.CausedCheckmate)
+			{
+				resultText.text = $"{latestHalfMove.Piece.Owner} Wins!";
+			}
+			else if (latestHalfMove.CausedStalemate)
+			{
+				resultText.text = "Draw.";
+			}
 		}
-
 		resultText.gameObject.SetActive(true);
 	}
 
@@ -179,7 +183,8 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 	private void RemoveAlternateHistory() {
 		if (!moveUITimeline.IsUpToDate) {
 			GameManager.Instance.HalfMoveTimeline.TryGetCurrent(out HalfMove lastHalfMove);
-			resultText.gameObject.SetActive(lastHalfMove.CausedCheckmate);
+            if (resultText != null)
+                resultText.gameObject.SetActive(lastHalfMove.CausedCheckmate);
 			List<FullMoveUI> divergentFullMoveUIs = moveUITimeline.PopFuture();
 			foreach (FullMoveUI divergentFullMoveUI in divergentFullMoveUIs) {
 				Destroy(divergentFullMoveUI.gameObject);
@@ -214,13 +219,15 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 
     public void OnResignButtonClicked()
     {
-        if (resultText.gameObject.activeSelf)
-            return;
+		if (resultText != null)
+		{
+			if (resultText.gameObject.activeSelf)
+				return;
 
-        Side sideToMove = GameManager.Instance.SideToMove;
-        resultText.text = $"{sideToMove} resigned. {(sideToMove == Side.White ? "Black" : "White")} wins!";
-        resultText.gameObject.SetActive(true);
-
+			Side sideToMove = GameManager.Instance.SideToMove;
+			resultText.text = $"{sideToMove} resigned. {(sideToMove == Side.White ? "Black" : "White")} wins!";
+			resultText.gameObject.SetActive(true);
+		}
         Time.timeScale = 0f;
         gameStatusText.text = "Game Over (Resign)";
 
@@ -230,9 +237,11 @@ public class UIManager : MonoBehaviourSingleton<UIManager> {
 
     public void OnOfferDrawButtonClicked()
     {
-        resultText.text = "Draw agreed.";
-        resultText.gameObject.SetActive(true);
-
+		if (resultText != null)
+		{
+			resultText.text = "Draw agreed.";
+			resultText.gameObject.SetActive(true);
+		}
         Time.timeScale = 0f;
         gameStatusText.text = "Game Drawn";
 
